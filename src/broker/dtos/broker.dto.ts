@@ -19,7 +19,7 @@ export type AedesInitOption = {
   redis?: {
     host: string;
     port: number;
-    password: string;
+    password?: string;
     mqEmitterDb: number;
     persistenceDb: number;
   };
