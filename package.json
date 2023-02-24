@@ -1,0 +1,30 @@
+{
+  "name": "@jamesshr/mqtt-broker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index",
+  "types": "dist/index",
+  "scripts": {
+    "test": "echo \"no test specified\"",
+    "build": "rimraf dist && tsc",
+    "prepublish": "npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@nestjs/common": "^9.3.9",
+    "aedes": "^0.46.2",
+    "aedes-persistence-redis": "^6.0.0",
+    "aedes-server-factory": "^0.2.1",
+    "fs": "^0.0.1-security",
+    "mqemitter-redis": "^3.0.0",
+    "mqtt-packet": "^8.1.2",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.14.0",
+    "rimraf": "^4.1.2",
+    "typescript": "^4.9.5"
+  }
+}
