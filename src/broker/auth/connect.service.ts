@@ -12,7 +12,7 @@ export interface MqttConnectAuthService {
 
 @Injectable()
 export class MqttConnectAuthServiceImpl implements MqttConnectAuthService {
-  public constructor() { }
+  public constructor() {}
 
   public async authenticate(
     client: Client,

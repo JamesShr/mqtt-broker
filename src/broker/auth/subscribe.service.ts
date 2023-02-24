@@ -12,7 +12,7 @@ export interface MqttSubscribeAuthService {
 
 @Injectable()
 export class MqttSubscribeAuthServiceImpl implements MqttSubscribeAuthService {
-  public constructor() { }
+  public constructor() {}
 
   public async authorizeSubscribe(
     client: Client,

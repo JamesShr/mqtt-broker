@@ -9,7 +9,7 @@ import { BrokerModule } from '@jamesshr/mqtt-broker';
   imports: [
     BrokerModule.forRoot({
       broker: {
-        port: 1884,
+        port: 1883,
         redis: {
           host: 'redis',
           port: 6379,

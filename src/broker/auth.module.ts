@@ -15,4 +15,4 @@ import { MqttSubscribeAuthServiceImpl } from './auth/subscribe.service';
     MqttSubscribeAuthServiceImpl,
   ],
 })
-export class AuthModule { }
+export class AuthModule {}

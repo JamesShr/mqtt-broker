@@ -12,7 +12,7 @@ export interface MqttPublishAuthService {
 
 @Injectable()
 export class MqttPublishAuthServiceImpl implements MqttPublishAuthService {
-  public constructor() { }
+  public constructor() {}
 
   public async authorizePublish(
     client: Client,

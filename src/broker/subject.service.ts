@@ -4,16 +4,18 @@ import {
   Logger,
   OnApplicationBootstrap,
 } from '@nestjs/common';
-import { Subject, of, fromEvent, EMPTY, Observable } from 'rxjs';
-import { map, catchError, toArray } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+import { BrokerService } from './broker.service';
 import {
-  BrokerService,
   OnPublishEvent,
   IpClient,
   OnSubscribeEvent,
   OnUnSubscribeEvent,
-} from './broker.service';
-import { Subscription } from 'aedes';
+  SubscribeEvent,
+  UnSubscribeEvent,
+  SubjectInitOption
+} from './dtos/broker.dto';
 
 export interface SubjectService {
   getPublishSubject(): Subject<OnPublishEvent>;
@@ -21,33 +23,12 @@ export interface SubjectService {
   getDisconnectSubject(): Subject<IpClient>;
   getSubscribeSubject(): Subject<SubscribeEvent>;
   getUnSubscribeSubject(): Subject<UnSubscribeEvent>;
-}
-
-export type Payload = { [key: string]: number | string | null };
-export type Report = {
-  character: string;
-  id: string;
-  topic: string;
-  payload: Payload[];
-  timestamp: number;
 };
-export type SubscribeEvent = {
-  client: string;
-  topics: string[];
-};
-
-export type UnSubscribeEvent = {
-  client: string;
-  topics: string[];
-};
-
-export type SubjectInitOption = {
-  topic: RegExp
-}
 
 @Injectable()
 export class SubjectServiceImpl
-  implements SubjectService, OnApplicationBootstrap {
+  implements SubjectService, OnApplicationBootstrap
+{
   private subjectInitOption: SubjectInitOption;
   private readonly publishSubject = new Subject<OnPublishEvent>();
   private readonly connectSubject = new Subject<IpClient>();
@@ -61,11 +42,7 @@ export class SubjectServiceImpl
     options: Partial<SubjectInitOption>,
     private readonly mqttBrokerService: BrokerService,
   ) {
-    this.subjectInitOption = Object.assign(
-      {},
-      { topic: /(.+)/ },
-      options
-    );
+    this.subjectInitOption = Object.assign({}, { topic: /(.+)/ }, options);
   }
 
   public onApplicationBootstrap(): void {

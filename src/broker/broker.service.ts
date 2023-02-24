@@ -4,94 +4,26 @@ import {
   OnModuleInit,
   OnApplicationBootstrap,
 } from '@nestjs/common';
-import aedes, {
-  Aedes,
-  Client,
-  Subscription,
-  AedesOptions,
-} from 'aedes';
-import { Observable, fromEvent, Subject } from 'rxjs';
-import { map, filter, mergeMap, toArray } from 'rxjs/operators';
+import aedes, { Aedes, AedesOptions } from 'aedes';
+import { Observable, fromEvent } from 'rxjs';
+import { map, filter } from 'rxjs/operators';
 import { createServer } from 'aedes-server-factory';
 import { protocolDecoder } from 'aedes-protocol-decoder';
-import { ISubscription, IPublishPacket } from 'mqtt-packet';
 import mqemitter from 'mqemitter-redis';
 import aedesPersistenceRedis from 'aedes-persistence-redis';
 import { readFileSync } from 'fs';
 import { MqttConnectAuthService } from './auth/connect.service';
 import { MqttPublishAuthService } from './auth/publish.service';
 import { MqttSubscribeAuthService } from './auth/subscribe.service';
-
-export type AedesInitOption = {
-  port: number;
-  tls?: {
-    enable: boolean;
-    port: number;
-    certPath: string;
-    keyPath: string;
-    caPath: string;
-    requestCert: boolean;
-    rejectUnauthorized: boolean;
-  };
-  ws?: {
-    enable: boolean;
-    port: number;
-  };
-  redis?: {
-    host: string;
-    port: number;
-    password: string;
-    mqEmitterDb: number;
-    persistenceDb: number;
-  };
-};
-
-export interface IpClient extends Client {
-  ip: string;
-  eventAt: Date;
-}
-
-export type PublishPacket = {
-  topic: string;
-  payload: string | Buffer;
-  qos?: 0 | 1 | 2;
-  retain?: boolean;
-  dup?: boolean;
-};
-
-export type OnSubscribeEvent = {
-  client: IpClient;
-  subscriptions: Subscription[];
-};
-
-export type OnUnSubscribeEvent = {
-  client: IpClient;
-  subscriptions: string[];
-};
-
-export type OnPublishEvent = {
-  client: IpClient;
-  packet: IPublishPacket;
-};
-
-export type TopicFilter = (topic: string) => boolean;
-
-export type Report = {
-  character: string;
-  id: string;
-  topic: string;
-  payload: { [key: string]: number | string | null }[];
-  timestamp: number;
-};
-export type SubscribeEvent = {
-  client: string;
-  topics: string[];
-};
-
-export type UnSubscribeEvent = {
-  client: string;
-  topics: string[];
-};
+import {
+  PublishPacket,
+  TopicFilter,
+  OnPublishEvent,
+  IpClient,
+  OnSubscribeEvent,
+  OnUnSubscribeEvent,
+  AedesInitOption,
+} from './dtos/broker.dto';
 
 export interface BrokerService {
   getAedesInstance(): Aedes;
@@ -114,7 +46,8 @@ export const BROKER_SERVICE = Symbol('BROKER_SERVICE');
 
 @Injectable()
 export class BrokerServiceImpl
-  implements BrokerService, OnModuleInit, OnApplicationBootstrap {
+  implements BrokerService, OnModuleInit, OnApplicationBootstrap
+{
   private aedesInstance: Aedes & AedesOptions;
   private aedesInitOption: AedesInitOption;
 
@@ -122,13 +55,9 @@ export class BrokerServiceImpl
     options: Partial<AedesInitOption>,
     private readonly mqttConnectAuthService: MqttConnectAuthService,
     private readonly mqttPublishAuthService: MqttPublishAuthService,
-    private readonly mqttSubscribeAuthService: MqttSubscribeAuthService
+    private readonly mqttSubscribeAuthService: MqttSubscribeAuthService,
   ) {
-    this.aedesInitOption = Object.assign(
-      {},
-      { port: 1883 },
-      options
-    );
+    this.aedesInitOption = Object.assign({}, { port: 1883 }, options);
   }
 
   public async onModuleInit(): Promise<void> {
@@ -151,19 +80,25 @@ export class BrokerServiceImpl
       },
     };
     if (this.aedesInitOption.redis) {
-      Logger.debug(`MQTT set mq ->${this.aedesInitOption.redis.mqEmitterDb} and persistence ->${this.aedesInitOption.redis.mqEmitterDb} by redis ${this.aedesInitOption.redis.host}:${this.aedesInitOption.redis.port}`)
+      Logger.debug(
+        `MQTT set mq ->${this.aedesInitOption.redis.mqEmitterDb} and persistence ->${this.aedesInitOption.redis.mqEmitterDb} by redis ${this.aedesInitOption.redis.host}:${this.aedesInitOption.redis.port}`,
+      );
       aedesConfig.mq = mqemitter({
         host: this.aedesInitOption.redis.host,
         port: this.aedesInitOption.redis.port,
         db: this.aedesInitOption.redis.mqEmitterDb,
-        ...(this.aedesInitOption.redis.password ? { password: this.aedesInitOption.redis.password } : {}),
-      })
+        ...(this.aedesInitOption.redis.password
+          ? { password: this.aedesInitOption.redis.password }
+          : {}),
+      });
       aedesConfig.persistence = aedesPersistenceRedis({
         host: this.aedesInitOption.redis.host,
         port: this.aedesInitOption.redis.port,
         db: this.aedesInitOption.redis.mqEmitterDb,
-        ...(this.aedesInitOption.redis.password ? { password: this.aedesInitOption.redis.password } : {}),
-      })
+        ...(this.aedesInitOption.redis.password
+          ? { password: this.aedesInitOption.redis.password }
+          : {}),
+      });
     }
     this.aedesInstance = aedes(aedesConfig);
   }
@@ -173,7 +108,9 @@ export class BrokerServiceImpl
       trustProxy: true,
       protocolDecoder,
     }).listen(this.aedesInitOption.port, () => {
-      Logger.debug(`MQTT Broker is listening on port ${this.aedesInitOption.port}`)
+      Logger.debug(
+        `MQTT Broker is listening on port ${this.aedesInitOption.port}`,
+      );
     });
 
     if (this.aedesInitOption.tls && this.aedesInitOption.tls.enable) {
@@ -186,7 +123,9 @@ export class BrokerServiceImpl
           rejectUnauthorized: this.aedesInitOption.tls.rejectUnauthorized,
         },
       }).listen(this.aedesInitOption.tls.port, () => {
-        Logger.debug(`MQTTs broker is listening on ${this.aedesInitOption.tls.port} port.`)
+        Logger.debug(
+          `MQTTs broker is listening on ${this.aedesInitOption.tls.port} port.`,
+        );
       });
     }
 
@@ -194,7 +133,9 @@ export class BrokerServiceImpl
       createServer(this.aedesInstance, { ws: true }).listen(
         this.aedesInitOption.ws.port,
         () => {
-          Logger.debug(`MQTT websocket is listening on ${this.aedesInitOption.ws.port} port.`);
+          Logger.debug(
+            `MQTT websocket is listening on ${this.aedesInitOption.ws.port} port.`,
+          );
         },
       );
     }
@@ -267,8 +208,7 @@ export class BrokerServiceImpl
         })),
         filter(({ packet }) => topicFilter(packet.topic)),
       );
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   public createOnClientObservable(): Observable<IpClient> {
