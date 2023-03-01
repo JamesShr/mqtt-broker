@@ -14,7 +14,7 @@ import {
   OnUnSubscribeEvent,
   SubscribeEvent,
   UnSubscribeEvent,
-  SubjectInitOption
+  SubjectInitOption,
 } from './dtos/broker.dto';
 
 export interface SubjectService {
@@ -23,7 +23,7 @@ export interface SubjectService {
   getDisconnectSubject(): Subject<IpClient>;
   getSubscribeSubject(): Subject<SubscribeEvent>;
   getUnSubscribeSubject(): Subject<UnSubscribeEvent>;
-};
+}
 
 @Injectable()
 export class SubjectServiceImpl
