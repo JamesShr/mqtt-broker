@@ -12,7 +12,7 @@ import {
   MqttSubscribeAuthServiceImpl,
   MqttSubscribeAuthService,
 } from './auth/subscribe.service';
-import { AuthModule } from './auth.module';
+// import { AuthModule } from './auth.module';
 import { SubjectServiceImpl } from './subject.service';
 import { AedesInitOption, SubjectInitOption } from './dtos/broker.dto';
 
@@ -49,9 +49,7 @@ const subjectServiceFactory = (options: Partial<SubjectInitOption>) => {
   };
 };
 
-@Module({
-  imports: [AuthModule],
-})
+@Module({})
 export class BrokerModule {
   static forRoot(options: {
     broker?: Partial<AedesInitOption>;
@@ -60,6 +58,18 @@ export class BrokerModule {
     const providers = [
       brokerServiceFactory(options ? options.broker : {}),
       subjectServiceFactory(options ? options.subject : {}),
+      {
+        provide: MqttConnectAuthServiceImpl,
+        useValue: new MqttConnectAuthServiceImpl(),
+      },
+      {
+        provide: MqttPublishAuthServiceImpl,
+        useValue: new MqttPublishAuthServiceImpl(),
+      },
+      {
+        provide: MqttSubscribeAuthServiceImpl,
+        useValue: new MqttSubscribeAuthServiceImpl(),
+      },
     ];
     return {
       providers: providers,
